@@ -29,6 +29,20 @@ function rsaEncrypt(plainText, publicKey) {
   return key.encrypt(plainText, "base64");
 }
 
+// AES Decryption
+function aesDecrypt(cipherText, key) {
+  const bytes = CryptoJS.AES.decrypt(cipherText, key);
+  return bytes.toString(CryptoJS.enc.Utf8);
+}
+
+// RSA Decryption
+function rsaDecrypt(cipherText, privateKey) {
+  const key = new NodeRSA();
+  key.importKey(privateKey, "pkcs1-private-pem");
+  return key.decrypt(cipherText, "utf8");
+}
+
+
 // RSA Key Pair Generation
 function generateRsaKeys() {
   const key = new NodeRSA({ b: 512 });
@@ -53,6 +67,24 @@ app.post("/encrypt", async (req, res) => {
     }
     
     res.json({ success: true, cipherText });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
+// Route to handle decryption
+app.post("/decrypt", (req, res) => {
+  const { method, key, cipherText } = req.body;
+
+  try {
+    let plainText;
+    if (method === "AES") {
+      plainText = aesDecrypt(cipherText, key);
+    } else if (method === "RSA") {
+      plainText = rsaDecrypt(cipherText, key);
+    }
+
+    res.json({ success: true, plainText });
   } catch (error) {
     res.json({ success: false, error: error.message });
   }
